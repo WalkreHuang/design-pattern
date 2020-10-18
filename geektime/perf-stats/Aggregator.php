@@ -8,76 +8,70 @@ class Aggregator
 {
     /**
      * 统计接口响应数据
-     * @param $requestInfos
+     * @param $requestInfoMap
      * @param int $durationInSecond
      */
-    public function aggregate(array $requestInfos, int $durationInSecond)
+    public function aggregate(array $requestInfoMap, int $durationInSecond)
     {
-        $maxRespTime = PHP_INT_MAX;
-        $minRespTime = PHP_INT_MIN;
+        $requestHash = [];
+        foreach ($requestInfoMap as $apiName => $requestInfos) {
+            $requestStat = $this->doAggregate($requestInfos, $durationInSecond);
+            $requestHash[$apiName] = $requestStat;
+        }
 
-        $avgRespTime = -1;
-        $p999RespTime = -1;
-        $p99RespTime = -1;
-        $sumRespTime = 0;
+        return $requestHash;
+    }
 
-        $count = 0;
-        /**
-         * 找出所有请求中响应时间最大、小的时间，并统计请求的总时间
-         */
+    private function doAggregate($requestInfos, int $durationInSecond)
+    {
+        $respTimes = [];
+
         foreach ($requestInfos as $requestInfo) {
-            ++$count;
-            $respTime = $requestInfo->getResponseTime();
-            if ($maxRespTime < $respTime) {
-                $maxRespTime = $respTime;
-            }
-            if ($minRespTime > $respTime) {
-                $minRespTime = $respTime;
-            }
-
-            $sumRespTime += $respTime;
-        }
-
-        if ($count !== 0) {
-            $avgRespTime = $sumRespTime / $count;
-        }
-
-        //每秒请求数
-        $tps = (double) ($count / $durationInSecond);
-
-        /**
-         * 按照请求响应时间给所有请求进行排序
-         */
-        usort($requestInfos, function ($a, $b) {
-            if ($a->getResponseTime() > $b->getResponseTime()) {
-                return -1;
-            }
-
-            if ($a->getResponseTime() < $b->getResponseTime()) {
-                return 1;
-            }
-
-            return 0;
-        });
-
-        $idx999 = (int) $count * 0.999;
-        $idx99 = (int) $count * 0.99;
-        if ($count !== 0) {
-            $p999RespTime = $requestInfos[$idx999]->getResponseTime();
-            $p99RespTime = $requestInfos[$idx99]->getResponseTime();
+            $respTimes[] = $requestInfo->getResponseTime();
         }
 
         $requestStat = new RequestStat();
-        $requestStat->setMaxResponseTime($maxRespTime)
-            ->setMinResponseTime($minRespTime)
-            ->setAvgResponseTime($avgRespTime)
-            ->setP99ResponseTime($p99RespTime)
-            ->setP999ResponseTime($p999RespTime)
-            ->setCount($count)
-            ->setTps($tps);
-
-        return $requestStat;
+        $requestStat->setMaxResponseTime($this->max($respTimes))
+            ->setMinResponseTime($this->min($respTimes))
+            ->setAvgResponseTime($this->avg($respTimes))
+            ->setP99ResponseTime($this->percentile99($respTimes))
+            ->setP999ResponseTime($this->percentile999($respTimes))
+            ->setCount(count($respTimes))
+            ->setTps($this->tps(count($respTimes), $durationInSecond));
     }
 
+    private function max(array $dataset)
+    {
+        return max($dataset);
+    }
+
+    private function min(array $dataset)
+    {
+        return min($dataset);
+    }
+
+    private function avg(array $respTimes)
+    {
+        return (sum($respTimes) / count($respTimes));
+    }
+
+    private function percentile99(array $respTimes)
+    {
+        sort($respTimes);
+        $idx99 = (int) count($respTimes) * 0.99;
+        return $respTimes[$idx99];
+    }
+
+    private function percentile999(array $respTimes)
+    {
+        sort($respTimes);
+        $idx999 = (int) count($respTimes) * 0.999;
+        return $respTimes[$idx999];
+    }
+
+    private function tps(int $count, int $durationInSecond)
+    {
+        return $count/$durationInSecond;
+    }
 
 }

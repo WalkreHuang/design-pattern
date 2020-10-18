@@ -4,10 +4,14 @@
 class ConsoleReporter
 {
     private $metricsStorage;
+    private $aggregator;
+    private $viewer;
 
-    public function __construct(MetricsStorage $metricsStorage)
+    public function __construct(MetricsStorage $metricsStorage, Aggregator $aggregator, StatViewer $viewer)
     {
         $this->metricsStorage = $metricsStorage;
+        $this->aggregator = $aggregator;
+        $this->viewer = $viewer;
     }
 
     /**
@@ -25,17 +29,11 @@ class ConsoleReporter
 
             $requestInfoMap = $this->metricsStorage->getRequestInfo($startTimeSeconds, $endTimeInSeconds);
 
-            $stats_map = [];
-            $aggregator = new Aggregator();
-            foreach ($requestInfoMap as $api_name => $requestInfo) {
-                // 第2个代码逻辑：根据原始数据，计算得到统计数据；
-                $requestStat = $aggregator->aggregate($requestInfo, $durationInSeconds);
-                $stats_map[$api_name] = $requestStat;
-            }
-            // 第3个代码逻辑：将统计数据显示到终端（命令行或邮件）；
-            echo sprintf("Time Span: [". $startTimeSeconds.", ".$endTimeInSeconds."]").PHP_EOL;
-            echo json_encode($stats_map);
+            // 第2个代码逻辑：根据原始数据，计算得到统计数据；
+            $stats_map = $this->aggregator->aggregate($requestInfoMap, $durationInSeconds);
 
+            // 第3个代码逻辑：将统计数据显示到终端（命令行或邮件）；
+            $this->viewer->output($stats_map, $startTimeSeconds, $endTimeInSeconds);
             sleep($periodInSeconds);
         }
     }
