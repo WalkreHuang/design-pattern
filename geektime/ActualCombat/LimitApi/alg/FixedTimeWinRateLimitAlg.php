@@ -7,7 +7,7 @@
  * Email: <huangwalker@qq.com>
  */
 
-class RateLimitAlg
+class FixedTimeWinRateLimitAlg implements RateLimitAlg
 {
     private $limit;
 

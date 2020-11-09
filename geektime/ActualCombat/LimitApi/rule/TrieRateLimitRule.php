@@ -7,7 +7,7 @@
  * Email: <huangwalker@qq.com>
  */
 
-class RateLimitRule
+class TrieRateLimitRule implements RateLimitRule
 {
     public function __construct(array $ruleConfig)
     {

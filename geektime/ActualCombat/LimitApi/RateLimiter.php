@@ -21,7 +21,7 @@ class RateLimiter
     private $counters = [];
 
     /**
-     * @var RateLimitRule
+     * @var TrieRateLimitRule
      */
     private $rule;
 
@@ -30,7 +30,7 @@ class RateLimiter
         $ruleConfig = config('ratelimiter-rule');
 
         // 将限流规则构建成支持快速查找的数据结构RateLimitRule
-        $this->rule = new RateLimitRule($ruleConfig);
+        $this->rule = new TrieRateLimitRule($ruleConfig);
     }
 
     public function limit($appId, $url)
@@ -45,7 +45,7 @@ class RateLimiter
 
         $rateLimitCounter = $this->counters[$counterKey];
         if (is_null($rateLimitCounter)) {
-            $newRateLimitCounter = new RateLimitAlg($apiLimit->getLimit());
+            $newRateLimitCounter = new FixedTimeWinRateLimitAlg($apiLimit->getLimit());
             $this->counters[$counterKey] = $newRateLimitCounter;
 
             $rateLimitCounter = $newRateLimitCounter;
