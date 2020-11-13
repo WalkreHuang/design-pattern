@@ -16,5 +16,5 @@
 function config($file)
 {
     $config_file = __DIR__.'../config/'.$file.'.php';
-    return file_get_contents($config_file);
+    return require($config_file);
 }
