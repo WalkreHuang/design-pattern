@@ -3,7 +3,6 @@
 require_once 'DynamicLogProxy.php';
 require_once 'OrderController.php';
 require_once 'UserController.php';
-require_once 'UserController.php';
 
 $storage = new RedisMetricsStorage();
 $metricsCollector = new MetricsCollector($storage);
@@ -15,4 +14,4 @@ $userController->login();
 
 $orderController = new OrderController();
 $orderController = $proxy->createProxy($orderController);
-$orderController->login();
+$orderController->addOrder();
