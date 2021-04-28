@@ -1,7 +1,7 @@
 <?php
 
-# 能修改源代码的场景
-class UserController implements IUserController
+# 不能修改源代码的场景
+class UserController
 {
     public function login($telephone, $password)
     {
