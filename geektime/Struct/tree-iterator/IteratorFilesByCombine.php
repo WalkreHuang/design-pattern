@@ -106,7 +106,7 @@ $path = '/Users/chenlihuang/test';
 $dir = new Dir($path);
 $a_dir = new Dir($path.'/a');
 $b_dir = new Dir($path.'/b');
-$c_dir = new Directory($path.'/c');
+$c_dir = new Dir($path.'/c');
 
 $a_file1 = new File($path.'/a/test.txt');
 $a_file2 = new File($path.'/a/test2.txt');
